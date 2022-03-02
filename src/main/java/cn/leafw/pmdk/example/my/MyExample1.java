@@ -25,37 +25,42 @@ public class MyExample1 {
     private static final Long GB = 1024L * 1024 * 1024;
 
     public static void main(String[] args) {
-        long start = System.currentTimeMillis();
-        String path = "/home/wyr/temp/nvm";
-        nvmWrite(path);
-        long time1 = System.currentTimeMillis();
-        System.out.println("write normal: {}" + String.valueOf(time1 - start));
 
-        path = "/mnt/pmem0/weigong";
-        nvmWrite(path);
+        String path = "/mnt/pmem0/weigong";
         long start2 = System.currentTimeMillis();
-        System.out.println("write dax: {}" + String.valueOf(start2 - time1));
+        nvmWrite(path);
+        System.out.println("write dax: {}" + String.valueOf(System.currentTimeMillis() - start2));
+
+        path = "/home/wyr/temp/nvm";
+        long start = System.currentTimeMillis();
+        nvmWrite(path);
+        System.out.println("write normal: {}" + String.valueOf(System.currentTimeMillis() - start));
+
 
         // mmap
+        long time3 = System.currentTimeMillis();
         mmapWrite();
-        System.out.println("mmap write: " + String.valueOf(System.currentTimeMillis() - start2));
+        System.out.println("mmap write: " + String.valueOf(System.currentTimeMillis() - time3));
     }
 
     private static void nvmWrite(String path) {
-        boolean exists = MemoryPool.exists(path);
-        if (!exists) {
-            long start = System.currentTimeMillis();
-            MemoryPool pool = MemoryPool.createPool(path, GB);
-            long offset = 0;
-            long size = GB;
-            while (size != 0) {
-                pool.setInt(offset, 1);
-                size -= Integer.BYTES;
-                offset += Integer.BYTES;
-            }
-        }else {
-            System.out.println("exist " );
+//        boolean exists = MemoryPool.exists(path);
+//        if (!exists) {
+//
+//        }else {
+//            System.out.println("exist " );
+//        }
+        long start = System.currentTimeMillis();
+        MemoryPool pool = MemoryPool.createPool(path, GB);
+        System.out.println("创建内存池消耗时间: " + String.valueOf(System.currentTimeMillis() - start));
+        long offset = 0;
+        long size = GB;
+        while (size != 0) {
+            pool.setInt(offset, 1);
+            size -= Integer.BYTES;
+            offset += Integer.BYTES;
         }
+        pool.flush(0, GB);
     }
 
     private static void mmapWrite() {
